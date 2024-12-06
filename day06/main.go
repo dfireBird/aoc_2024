@@ -59,50 +59,64 @@ func Part1(input string) (result, error) {
 func Part2(input string, prev_result result) (result, error) {
 	guardPos, sqDim, obstacles := parseInput(input)
 
-	sum := 0
-	for x := range sqDim {
-		for y := range sqDim {
-			curPos := Pos{x, y}
-			if obstacles.Contains(curPos) || curPos == guardPos {
-				continue
-			}
+	seenPos := make(set.Set[Pos])
 
-			obstacles.Add(curPos)
-			if isLooping(guardPos, sqDim, obstacles) {
-				sum += 1
-			}
-			obstacles.Remove(curPos)
+	curPos := guardPos
+	curDir := UP
+	for {
+		if !withinBounds(curPos, sqDim) {
+			break
 		}
+		seenPos.Add(curPos)
+
+		curPos, curDir = move(curPos, curDir, obstacles)
 	}
+
+	sum := 0
+	for curPos := range seenPos {
+		if obstacles.Contains(curPos) || curPos == guardPos {
+			continue
+		}
+
+		obstacles.Add(curPos)
+		if isLooping(guardPos, sqDim, obstacles) {
+			sum += 1
+		}
+		obstacles.Remove(curPos)
+
+	}
+
 	return result(sum), nil
 }
 
 func isLooping(initialGuardPos Pos, sqDim int, obstacles set.Set[Pos]) bool {
-	slowPos := initialGuardPos
-	fastPos := initialGuardPos
-	slowDir := UP
-	fastDir := UP
+	type PosDir struct {
+		pos Pos
+		dir Direction
+	}
 
+	seen := make(set.Set[PosDir])
+
+	curPosDir := PosDir{initialGuardPos, UP}
 	for {
-		if !withinBounds(slowPos, sqDim) || !withinBounds(fastPos, sqDim) {
+		if !withinBounds(curPosDir.pos, sqDim) {
 			return false
 		}
 
-		slowPos, slowDir = move(slowPos, slowDir, obstacles)
-		newFastPos, newFastDir := move(fastPos, fastDir, obstacles)
-		fastPos, fastDir = move(newFastPos, newFastDir, obstacles)
-
-		if slowPos == fastPos {
+		if seen.Contains(curPosDir) {
 			return true
 		}
+
+		seen.Add(curPosDir)
+
+		curPosDir.pos, curPosDir.dir = move(curPosDir.pos, curPosDir.dir, obstacles)
 	}
 }
 
 func move(curPos Pos, curDir Direction, obstacles set.Set[Pos]) (Pos, Direction) {
 	newPos := curPos.add(curDir)
 	if obstacles.Contains(newPos) {
-		curDir = curDir.turn90()
-		newPos = curPos.add(curDir)
+		return curPos, curDir.turn90()
 	}
 
 	return newPos, curDir
