@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/dfirebird/aoc_2024/internal/coordinate"
 	"github.com/dfirebird/aoc_2024/internal/set"
 )
 
@@ -13,18 +14,6 @@ import (
 var input string
 
 type result int
-
-type Pos struct {
-	x int
-	y int
-}
-
-type Direction Pos
-
-var UP Direction = Direction{x: 0, y: -1}
-var DOWN Direction = Direction{x: 0, y: 1}
-var RIGHT Direction = Direction{x: 1, y: 0}
-var LEFT Direction = Direction{x: -1, y: 0}
 
 func main() {
 	Result1, err := Part1(input)
@@ -41,10 +30,10 @@ func main() {
 
 func Part1(input string) (result, error) {
 	guardPos, sqDim, obstacles := parseInput(input)
-	seenPos := make(set.Set[Pos])
+	seenPos := make(set.Set[coordinate.Position])
 
 	curPos := guardPos
-	curDir := UP
+	curDir := coordinate.UP
 	for {
 		if !withinBounds(curPos, sqDim) {
 			break
@@ -59,10 +48,10 @@ func Part1(input string) (result, error) {
 func Part2(input string, prev_result result) (result, error) {
 	guardPos, sqDim, obstacles := parseInput(input)
 
-	seenPos := make(set.Set[Pos])
+	seenPos := make(set.Set[coordinate.Position])
 
 	curPos := guardPos
-	curDir := UP
+	curDir := coordinate.UP
 	for {
 		if !withinBounds(curPos, sqDim) {
 			break
@@ -89,15 +78,15 @@ func Part2(input string, prev_result result) (result, error) {
 	return result(sum), nil
 }
 
-func isLooping(initialGuardPos Pos, sqDim int, obstacles set.Set[Pos]) bool {
+func isLooping(initialGuardPos coordinate.Position, sqDim int, obstacles set.Set[coordinate.Position]) bool {
 	type PosDir struct {
-		pos Pos
-		dir Direction
+		pos coordinate.Position
+		dir coordinate.Direction
 	}
 
 	seen := make(set.Set[PosDir])
 
-	curPosDir := PosDir{initialGuardPos, UP}
+	curPosDir := PosDir{initialGuardPos, coordinate.UP}
 	for {
 		if !withinBounds(curPosDir.pos, sqDim) {
 			return false
@@ -113,25 +102,25 @@ func isLooping(initialGuardPos Pos, sqDim int, obstacles set.Set[Pos]) bool {
 	}
 }
 
-func move(curPos Pos, curDir Direction, obstacles set.Set[Pos]) (Pos, Direction) {
-	newPos := curPos.add(curDir)
+func move(curPos coordinate.Position, curDir coordinate.Direction, obstacles set.Set[coordinate.Position]) (coordinate.Position, coordinate.Direction) {
+	newPos := curPos.Move(curDir)
 	if obstacles.Contains(newPos) {
-		return curPos, curDir.turn90()
+		return curPos, curDir.Turn90()
 	}
 
 	return newPos, curDir
 }
 
-func parseInput(input string) (Pos, int, set.Set[Pos]) {
-	var guardPos Pos
-	obstacles := make(set.Set[Pos])
+func parseInput(input string) (coordinate.Position, int, set.Set[coordinate.Position]) {
+	var guardPos coordinate.Position
+	obstacles := make(set.Set[coordinate.Position])
 
 	sqDim := len(strings.Split(input, "\n")[0])
 
 	modifiedInput := strings.ReplaceAll(input, "\n", "")
 	for x := range sqDim {
 		for y := range sqDim {
-			curPos := Pos{x, y}
+			curPos := coordinate.Position{x, y}
 			curRune := at(modifiedInput, sqDim, curPos)
 			if curRune == '#' {
 				obstacles.Add(curPos)
@@ -144,29 +133,10 @@ func parseInput(input string) (Pos, int, set.Set[Pos]) {
 	return guardPos, sqDim, obstacles
 }
 
-func (a Pos) add(dir Direction) Pos {
-	return Pos{x: a.x + dir.x, y: a.y + dir.y}
+func withinBounds(pos coordinate.Position, sqDim int) bool {
+	return pos.X >= 0 && pos.X < sqDim && pos.Y >= 0 && pos.Y < sqDim
 }
 
-func (a Direction) turn90() Direction {
-	switch a {
-	case UP:
-		return RIGHT
-	case RIGHT:
-		return DOWN
-	case DOWN:
-		return LEFT
-	case LEFT:
-		return UP
-	}
-
-	panic("Unexpected direction, verify dirction variable")
-}
-
-func withinBounds(pos Pos, sqDim int) bool {
-	return pos.x >= 0 && pos.x < sqDim && pos.y >= 0 && pos.y < sqDim
-}
-
-func at(s string, sqDim int, pos Pos) rune {
-	return rune(s[pos.x+sqDim*pos.y])
+func at(s string, sqDim int, pos coordinate.Position) rune {
+	return rune(s[pos.X+sqDim*pos.Y])
 }
