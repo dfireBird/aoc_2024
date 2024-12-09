@@ -78,7 +78,7 @@ func defrag(fs []int) []int {
 }
 
 func isDefragDone(fs []int) bool {
-	var freeIdxs []int
+	var freeIdxs []int = make([]int, 0, len(fs)/2+1)
 
 	for i, val := range fs {
 		if val == -1 {
