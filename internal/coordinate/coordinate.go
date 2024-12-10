@@ -12,6 +12,8 @@ var DOWN Direction = Direction{X: 0, Y: 1}
 var RIGHT Direction = Direction{X: 1, Y: 0}
 var LEFT Direction = Direction{X: -1, Y: 0}
 
+var DIRECTIONS = [4]Direction{UP, RIGHT, DOWN, LEFT}
+
 func (a Position) Move(dir Direction) Position {
 	return Position{X: a.X + dir.X, Y: a.Y + dir.Y}
 }
