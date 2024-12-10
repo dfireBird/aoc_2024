@@ -6,8 +6,6 @@ import (
 	"log"
 	"maps"
 	"slices"
-
-	"github.com/dfirebird/aoc_2024/internal"
 )
 
 //go:embed input.txt
@@ -56,7 +54,7 @@ func checksum(fs []int) int {
 func defrag(fs []int) []int {
 	copiedFs := append(make([]int, 0, len(fs)), fs...)
 
-	var fileBlockIdxs []int
+	var fileBlockIdxs []int = make([]int, 0, len(fs)/2+1)
 	for i, val := range fs {
 		if val != -1 {
 			fileBlockIdxs = append(fileBlockIdxs, i)
@@ -65,7 +63,7 @@ func defrag(fs []int) []int {
 
 	idx := len(fileBlockIdxs) - 1
 	for i, block := range copiedFs {
-		if idx < 0 || isDefragDone(fs) {
+		if idx < 0 || i > fileBlockIdxs[idx] {
 			break
 		}
 
@@ -74,32 +72,8 @@ func defrag(fs []int) []int {
 			idx--
 		}
 	}
+
 	return fs
-}
-
-func isDefragDone(fs []int) bool {
-	var freeIdxs []int = make([]int, 0, len(fs)/2+1)
-
-	for i, val := range fs {
-		if val == -1 {
-			freeIdxs = append(freeIdxs, i)
-		}
-	}
-
-	var prevIdx = freeIdxs[0]
-	for i, idx := range freeIdxs {
-		if i == 0 {
-			continue
-		}
-
-		if idx-prevIdx > 1 {
-			return false
-		}
-
-		prevIdx = idx
-	}
-
-	return true
 }
 
 func compact(fs []int, fileMap, freeMap map[int]int) []int {
@@ -168,7 +142,7 @@ func parseInput(input string) ([]int, int, map[int]int, map[int]int) {
 			continue
 		}
 
-		valueInInt := internal.ToInt(string(value))
+		valueInInt := int(value - '0')
 		startIdx := len(fsMap)
 		for range valueInInt {
 			var appendVal int
